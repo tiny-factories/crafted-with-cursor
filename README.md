@@ -47,9 +47,9 @@ HOSTNAME=your-project-name.vercel.app  # We'll get this in step 6
 2. Go to [vercel.com](https://vercel.com) and sign in
 3. Click "Add New Project"
 4. Import your GitHub repo
-5. Add these environment variables in Vercel:
-   - `BLUESKY_HANDLE`: gndclouds.earth
-   - `BLUESKY_PASSWORD`: your-app-password
+5. Add these environment variables in Vercel (all three are required for the feed to work):
+   - `BLUESKY_HANDLE`: your handle (e.g. gndclouds.earth)
+   - `BLUESKY_PASSWORD`: your app password (from step 3)
    - `HOSTNAME`: (leave blank for now)
 6. Deploy!
 7. After deploy, copy your Vercel URL (e.g., `crafted-with-cursor-feed.vercel.app`)
@@ -125,6 +125,9 @@ const FEED_DESCRIPTION = 'Your description here';
 **Can't publish feed:**
 - Make sure you're using an App Password, not your main password
 - Check that HOSTNAME matches your Vercel URL exactly
+
+**"Internal Server Error" or "403 Forbidden" when opening the feed on Bluesky:**
+- The feed server must be authenticated to call Bluesky's API (getList, searchPosts). In Vercel, set `BLUESKY_HANDLE` and `BLUESKY_PASSWORD` (your app password) in Project Settings → Environment Variables, then redeploy.
 
 **Need help?**
 Open an issue or reach out to @gndclouds.earth on Bluesky

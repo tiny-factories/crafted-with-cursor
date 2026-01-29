@@ -12,6 +12,10 @@ const FEED_URI = process.env.FEED_URI || 'at://did:plc:YOUR_DID/app.bsky.feed.ge
 const PUBLISHER_DID = process.env.PUBLISHER_DID || '';
 const HOSTNAME = process.env.HOSTNAME || 'your-feed.vercel.app';
 
+// Bluesky credentials - required for feed server to call API (getList, searchPosts)
+const BLUESKY_HANDLE = process.env.BLUESKY_HANDLE || '';
+const BLUESKY_PASSWORD = process.env.BLUESKY_PASSWORD || '';
+
 // Your settings
 const YOUR_HANDLE = 'gndclouds.earth';
 const YOUR_LIST_URI = 'at://did:plc:tljbuz6rbn363t6f7ht2oxwz/app.bsky.graph.list/3mdlbumvg2r2l';
@@ -23,7 +27,23 @@ let yourDid: string | null = null;
 let listLastFetched = 0;
 const LIST_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
+// Authenticated agent - public API returns 403 for unauthenticated getList/searchPosts
+const agent = new AtpAgent({
+  service: 'https://api.bsky.app',
+  headers: [['User-Agent', 'CraftedWithCursorFeed/1.0']],
+});
+
+let loginPromise: Promise<void> | null = null;
+
+async function ensureLoggedIn(): Promise<void> {
+  if (agent.hasSession) return;
+  if (loginPromise) return loginPromise;
+  if (!BLUESKY_HANDLE || !BLUESKY_PASSWORD) {
+    throw new Error('BLUESKY_HANDLE and BLUESKY_PASSWORD must be set for the feed server to call the Bluesky API');
+  }
+  loginPromise = agent.login({ identifier: BLUESKY_HANDLE, password: BLUESKY_PASSWORD }).then(() => {});
+  await loginPromise;
+}
 
 // Fetch list members
 async function fetchListMembers(): Promise<Set<string>> {
@@ -99,6 +119,8 @@ app.get('/xrpc/app.bsky.feed.describeFeedGenerator', (req, res) => {
 // Get feed skeleton - this is the main feed logic
 app.get('/xrpc/app.bsky.feed.getFeedSkeleton', async (req, res) => {
   try {
+    await ensureLoggedIn();
+
     const limit = Math.min(Number(req.query.limit) || 50, 100);
     const cursor = req.query.cursor as string | undefined;
 
