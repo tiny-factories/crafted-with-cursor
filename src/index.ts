@@ -27,9 +27,9 @@ let yourDid: string | null = null;
 let listLastFetched = 0;
 const LIST_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Authenticated agent - public API returns 403 for unauthenticated getList/searchPosts
+// Authenticated agent - must use PDS (bsky.social) for login; App View (api.bsky.app) does not support createSession
 const agent = new AtpAgent({
-  service: 'https://api.bsky.app',
+  service: 'https://bsky.social',
   headers: [['User-Agent', 'CraftedWithCursorFeed/1.0']],
 });
 
